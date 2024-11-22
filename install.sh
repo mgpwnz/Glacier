@@ -70,6 +70,7 @@ install() {
 version: "3.7"
 services:
   glacier-verifier:
+    container_name: glacier-verifier
     image: docker.io/glaciernetwork/glacier-verifier:v0.0.1
     restart: always
     environment:
@@ -87,7 +88,7 @@ update() {
     docker compose -f "$HOME/glacier/docker-compose.yml" down
     docker compose -f "$HOME/glacier/docker-compose.yml" pull
     docker compose -f "$HOME/glacier/docker-compose.yml" up -d
-    docker logs -f glacier-verifier-1
+    docker logs -f glacier-verifier
 }
 
 uninstall() {
