@@ -1,22 +1,22 @@
 #!/bin/bash
 
-# Default variables
-function="install"
+# Default action
+action="install"
 
-# Options
+# Parse options
 option_value() { echo "$1" | sed -e 's%^--[^=]*=%%g; s%^-[^=]*=%%g'; }
 while test $# -gt 0; do
     case "$1" in
     -in|--install)
-        function="install"
+        action="install"
         shift
         ;;
     -up|--update)
-        function="update"
+        action="update"
         shift
         ;;
     -un|--uninstall)
-        function="uninstall"
+        action="uninstall"
         shift
         ;;
     *|--)
@@ -26,13 +26,16 @@ while test $# -gt 0; do
 done
 
 install() {
-    # Docker installation
+    # Install Docker
+    sudo apt update -y &>/dev/null
     sudo apt install docker.io -y &>/dev/null
+    sudo usermod -aG docker $USER
+
     cd $HOME
 
-    # Create directory and config
-    if [ ! -d "$HOME/glacier-verifier" ]; then
-        mkdir "$HOME/glacier-verifier"
+    # Create directory
+    if [ ! -d "$HOME/glacier" ]; then
+        mkdir "$HOME/glacier"
     fi
     sleep 1
 
@@ -63,7 +66,7 @@ install() {
     echo "All data is confirmed. Proceeding..."
 
     # Create Docker Compose file
-    tee "$HOME/glacier-verifier/docker-compose.yml" > /dev/null <<EOF
+    tee "$HOME/glacier/docker-compose.yml" > /dev/null <<EOF
 version: "3.7"
 services:
   glacier-verifier:
@@ -77,18 +80,18 @@ networks:
 EOF
 
     # Run container
-    docker compose -f "$HOME/glacier-verifier/docker-compose.yml" up -d
+    docker compose -f "$HOME/glacier/docker-compose.yml" up -d
 }
 
 update() {
-    docker compose -f "$HOME/glacier-verifier/docker-compose.yml" down
-    docker compose -f "$HOME/glacier-verifier/docker-compose.yml" pull
-    docker compose -f "$HOME/glacier-verifier/docker-compose.yml" up -d
-    docker logs -f glacier-verifier
+    docker compose -f "$HOME/glacier/docker-compose.yml" down
+    docker compose -f "$HOME/glacier/docker-compose.yml" pull
+    docker compose -f "$HOME/glacier/docker-compose.yml" up -d
+    docker logs -f glacier-verifier-1
 }
 
 uninstall() {
-    if [ ! -d "$HOME/glacier-verifier" ]; then
+    if [ ! -d "$HOME/glacier" ]; then
         echo "Directory not found"
         exit 1
     fi
@@ -96,8 +99,8 @@ uninstall() {
     read -r -p "Wipe all DATA? [y/N] " response
     case "$response" in
         [yY][eE][sS]|[yY]) 
-            docker-compose -f "$HOME/glacier-verifier/docker-compose.yml" down -v
-            rm -rf "$HOME/glacier-verifier"
+            docker compose -f "$HOME/glacier/docker-compose.yml" down -v
+            rm -rf "$HOME/glacier"
             echo "Data wiped"
             ;;
         *)
@@ -107,7 +110,7 @@ uninstall() {
     esac
 }
 
-# Actions
+# Ensure wget is installed
 sudo apt install wget -y &>/dev/null
 cd
-$function
+$action
