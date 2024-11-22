@@ -94,7 +94,7 @@ update() {
 uninstall() {
     if [ ! -d "$HOME/glacier" ]; then
         echo "Directory not found"
-        exit 1
+        exit 0
     fi
 
     read -r -p "Wipe all DATA? [y/N] " response
