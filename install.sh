@@ -4,7 +4,7 @@
 action="install"
 
 # Define version
-version="v0.0.2"
+version="v0.0.3"
 
 # Parse options
 option_value() { echo "$1" | sed -e 's%^--[^=]*=%%g; s%^-[^=]*=%%g'; }
